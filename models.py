@@ -58,3 +58,51 @@ class User:
         if user:
             return user
         return None
+
+
+class Message:
+    @classmethod
+    def to_dict(cls, type_, author, text=None):
+        d = dict()
+        d['type'] = type_
+        d['author'] = author
+        d['text'] = text
+        return d
+
+
+class Dialog:
+    db = None
+
+    @classmethod
+    @coroutine
+    def create(cls, people: list, name):
+        if not people:
+            return False
+        #  if cls.db.users.find({'$all'})
+        yield cls.db.dialogs.insert({'people': people, 'name': name, 'messages': []})
+        return True
+
+    @classmethod
+    @coroutine
+    def get_all_with_user(cls, user):
+        res = []
+        cursor = cls.db.dialogs.find({'people': user})
+        docs = yield cursor.to_list(length=2)
+        while docs:
+            res += docs
+            docs = yield cursor.to_list(length=2)
+
+        for r in res:
+            r['id'] = r['_id']._inc
+            del r['_id']
+        return res
+
+    @classmethod
+    @coroutine
+    def write_message(cls, message, author):
+        dialog_id = message['dialog_id']
+        _type = message['type']
+        text = message['text']
+        message = Message.to_dict(_type, author, text)
+        yield cls.db.dialogs.update({'_id': dialog_id}, {'$push': {'messages': message}})
+        return
