@@ -44,6 +44,14 @@ class LoginHandler(BaseHandler):
             self.set_cookie('name', username, expires_days=7)
 
 
+class LoginPageHandler(BaseHandler):
+    def get(self):
+        f = open('static/login/login.html')
+        s = f.read()
+        f.close()
+        self.write(s)
+
+
 class UserHandler(BaseHandler):
     @coroutine
     def get(self, name):
@@ -107,8 +115,6 @@ class Application(tornado.web.Application):
 
         settings = {
             'static_url_prefix': 'static/',
-            'facebook_api_key': '742008872572245',
-            'facebook_secret': 'a12c83d7452d510586921aa5d884f090',
         }
 
         handlers = (
@@ -119,6 +125,7 @@ class Application(tornado.web.Application):
             (r'/users', ChangeUserHandler),
             (r'/login', LoginHandler),
             (r'/dialogs', DialogHandler),
+            (r'/websocket/?', WebSocket),
             (r'/loginpage', LoginPageHandler),
             (r'/chats', MainHandler),
         )
